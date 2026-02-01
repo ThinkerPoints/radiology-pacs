@@ -54,8 +54,8 @@ class Viewport(QWidget):
         if not self.dataset:
             return
 
-        self.pixel_array = get_rescaled_pixels(self.dataset)[self.current_frame]
-        self.apply_window_level()
+        # self.pixel_array = get_rescaled_pixels(self.dataset)[self.current_frame]
+        # self.apply_window_level()
         
         self.pixmap = dicom_to_pixmap(self.dataset, self.current_frame)
         self.update()
