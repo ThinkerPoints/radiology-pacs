@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QPainter, QWheelEvent, QImage,QPixmap
 from tools.tool_manager import ToolManager
@@ -27,6 +27,9 @@ class Viewport(QWidget):
 
         # Zoom
         self.zoom_scale = 1.0
+
+        # Pan
+        self.pan_offset = QPointF(0, 0)
 
         self.setMinimumSize(400, 400)
         self.setMouseTracking(True)
@@ -112,20 +115,52 @@ class Viewport(QWidget):
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
         if self.pixmap:
-            # Apply zoom
-            if hasattr(self, 'zoom_scale') and self.zoom_scale != 1.0:
-                w = int(self.width() * self.zoom_scale)
-                h = int(self.height() * self.zoom_scale)
-                pix = self.pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                x = (self.width() - pix.width()) // 2
-                y = (self.height() - pix.height()) // 2
-                painter.drawPixmap(x, y, pix)
-            else:
-                painter.drawPixmap(self.rect(), self.pixmap)
+            zoom = getattr(self, 'zoom', 1.0)
+            pan = getattr(self, 'pan_offset', QPointF(0, 0))
 
-        # Draw active tool overlay
+            # Move origin to center of viewport
+            painter.translate(self.width() / 2, self.height() / 2)
+
+            # Apply pan
+            painter.translate(pan)
+
+            # Apply zoom
+            painter.scale(zoom, zoom)
+
+            # Draw pixmap centered
+            pix = self.pixmap
+            painter.drawPixmap(
+                -pix.width() / 2,
+                -pix.height() / 2,
+                pix
+            )
+
+        # Draw active tool overlay (no zoom/pan)
+        painter.resetTransform()
+
         if self.tool_manager.active_tool:
             self.tool_manager.active_tool.draw(painter)
+
+
+    # def paintEvent(self, event):
+    #     painter = QPainter(self)
+    #     painter.setRenderHint(QPainter.SmoothPixmapTransform)
+
+    #     if self.pixmap:
+    #         # Apply zoom and pan
+    #         scale = getattr(self, 'zoom_scale', 1.0)
+    #         offset = getattr(self, 'pan_offset', Qt.QPointF(0, 0))
+    #         painter.translate(self.pan_offset)
+    #         w = int(self.width() * scale)
+    #         h = int(self.height() * scale)
+    #         pix = self.pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+    #         x = (self.width() - pix.width()) // 2 + int(offset.x())
+    #         y = (self.height() - pix.height()) // 2 + int(offset.y())
+    #         painter.drawPixmap(x, y, pix)
+
+    #     # Draw active tool overlay
+    #     if self.tool_manager.active_tool:
+    #         self.tool_manager.active_tool.draw(painter)
 
     # ---------- WINDOW / LEVEL ADJUSTMENT ----------
     

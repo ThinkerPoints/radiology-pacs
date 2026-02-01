@@ -5,37 +5,36 @@ from tools.tool_category import ToolCategory
 
 @ToolPlugin("Zoom", ToolCategory.NAVIGATION)
 class ZoomTool(BaseTool):
-	name = "Zoom"
-	category = ToolCategory.NAVIGATION
-	shortcut = "Z"
+    name = "Zoom"
+    category = ToolCategory.NAVIGATION
+    shortcut = "Z"
 
-	def __init__(self, viewport):
-		super().__init__(viewport)
-		self.start_pos = None
-		self.start_scale = 1.0
-		self.scale = 1.0
+    def __init__(self, viewport):
+        super().__init__(viewport)
+        self.step = 1.1
 
-	def activate(self):
-		self.viewport.setCursor(Qt.SizeVerCursor)
+    def activate(self):
+        self.viewport.setCursor(Qt.CrossCursor)
 
-	def deactivate(self):
-		self.viewport.unsetCursor()
+    def deactivate(self):
+        self.viewport.unsetCursor()
 
-	def mouse_press(self, event):
-		self.start_pos = event.position().y()
-		self.start_scale = getattr(self.viewport, 'zoom_scale', 1.0)
+    def wheel(self, event):
+        delta = event.angleDelta().y()
+        if delta == 0:
+            return
 
-	def mouse_move(self, event):
-		if self.start_pos is None:
-			return
-		dy = event.position().y() - self.start_pos
-		factor = 1.0 + dy / 200.0  # Sensitivity
-		new_scale = max(0.1, min(10.0, self.start_scale * factor))
-		self.viewport.zoom_scale = new_scale
-		self.viewport.update()
+        zoom = getattr(self.viewport, "zoom", 1.0)
 
-	def mouse_release(self, event):
-		self.start_pos = None
+        if delta > 0:
+            zoom *= self.step
+        else:
+            zoom /= self.step
 
-	def draw(self, painter):
-		pass
+        zoom = max(0.1, min(zoom, 10.0))
+
+        self.viewport.zoom = zoom
+        self.viewport.update()
+
+    def draw(self, painter):
+        pass
