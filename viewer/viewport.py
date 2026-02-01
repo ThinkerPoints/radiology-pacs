@@ -54,37 +54,28 @@ class Viewport(QWidget):
         if not self.dataset:
             return
 
-        # self.pixel_array = get_rescaled_pixels(self.dataset)[self.current_frame]
-        # self.apply_window_level()
-        
-        self.pixmap = dicom_to_pixmap(self.dataset, self.current_frame)
-        self.update()
+        arr = get_rescaled_pixels(self.dataset)
+        # Handle multi-frame and color
+        if arr.ndim == 2:
+            self.pixel_array = arr
+        elif arr.ndim == 3:
+            if arr.shape[-1] == 3:
+                self.pixel_array = arr  # RGB single frame
+            else:
+                self.pixel_array = arr[self.current_frame]
+        elif arr.ndim == 4:
+            self.pixel_array = arr[self.current_frame]
+        else:
+            raise ValueError(f"Unsupported DICOM shape {arr.shape}")
 
-    # def update_frame(self):
-    #     if not self.dataset:
-    #         return
+        # Auto window/level on first frame
+        if not hasattr(self, "_wl_initialized"):
+            self.auto_window_level()
+            self._wl_initialized = True
 
-    #     arr = get_rescaled_pixels(self.dataset)
+        self.apply_window_level()
 
-    #     if arr.ndim == 2:
-    #         self.pixel_array = arr
-
-    #     elif arr.ndim == 3:
-    #         self.pixel_array = arr[self.current_frame]
-
-    #     elif arr.ndim == 4:
-    #         self.pixel_array = arr[self.current_frame, :, :, 0]
-
-    #     else:
-    #         raise ValueError(f"Unsupported DICOM shape {arr.shape}")
-
-    #     if not hasattr(self, "_wl_initialized"):
-    #         self.auto_window_level()
-    #         self._wl_initialized = True
-
-    #     self.apply_window_level()
-
-    # ---------- SLICE SCROLLING ----------
+       # ---------- SLICE SCROLLING ----------
 
     def wheelEvent(self, event: QWheelEvent):
         self.tool_manager.handle_wheel(event)
@@ -156,19 +147,16 @@ class Viewport(QWidget):
 
         img = (img * 255).astype(np.uint8)
 
-        h, w = img.shape
-
         if img.ndim == 2:
             h, w = img.shape
             bytes_per_line = w
             qimg = QImage(img.data, w, h, bytes_per_line, QImage.Format_Grayscale8).copy()
-
-        if img.ndim == 3 and img.shape[2] == 3:
+        elif img.ndim == 3 and img.shape[2] == 3:
             h, w, _ = img.shape
             bytes_per_line = 3 * w
             qimg = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888).copy()
         else:
-            qimg = QImage(img.data, w, h, w, QImage.Format_Grayscale8).copy()
+            raise ValueError(f"Unsupported image shape for window/level: {img.shape}")
 
         self.pixmap = QPixmap.fromImage(qimg)
         self.update()

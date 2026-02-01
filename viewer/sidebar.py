@@ -76,6 +76,8 @@ class DicomSidebar(QListWidget):
                 item = QListWidgetItem()
                 item.setData(Qt.UserRole, ds)
                 item.setSizeHint(widget.sizeHint())
+                # Ensure item is selectable and enabled
+                item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                 self.addItem(item)
                 self.setItemWidget(item, widget)
 
