@@ -135,7 +135,7 @@ class Viewport(QWidget):
                 pix
             )
 
-        # Draw active tool overlay (no zoom/pan)
+        # Draw active tool overlay (no zoom/pan/text)
         painter.resetTransform()
 
         if self.tool_manager.active_tool:
