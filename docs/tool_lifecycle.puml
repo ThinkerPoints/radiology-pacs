@@ -1,0 +1,28 @@
+@startuml
+' Tool lifecycle sequence diagram
+actor User
+participant MainWindow
+participant Viewport
+participant ToolManager
+participant Tool
+participant UndoRedo
+
+User -> MainWindow: select tool
+MainWindow -> Viewport: viewport.tool_manager.activate(name)
+Viewport -> ToolManager: activate(name)
+ToolManager -> Tool: deactivate() [if active]
+ToolManager -> Tool: activate()
+Tool -> MainWindow: set cursor / update UI
+User -> Viewport: mousePressEvent(event)
+Viewport -> ToolManager: handle_mouse_press(event)
+ToolManager -> Tool: mouse_press(event)
+User -> Viewport: mouseMoveEvent(event)
+Viewport -> ToolManager: handle_mouse_move(event)
+ToolManager -> Tool: mouse_move(event)
+User -> Viewport: mouseReleaseEvent(event)
+Viewport -> ToolManager: handle_mouse_release(event)
+ToolManager -> Tool: mouse_release(event)
+Tool -> UndoRedo: push(command)
+Tool -> MainWindow: update overlays / annotations
+
+@enduml
