@@ -1,10 +1,11 @@
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QPainter, QWheelEvent, QImage,QPixmap
 from tools.tool_manager import ToolManager
 from core.dicom_loader import dicom_to_pixmap, get_rescaled_pixels
 import numpy as np
 
-class Viewport(QWidget):
+class Viewport(QWidget):    
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -23,6 +24,9 @@ class Viewport(QWidget):
         self.pixel_array = None
         self.window = 400
         self.level = 40
+
+        # Zoom
+        self.zoom_scale = 1.0
 
         self.setMinimumSize(400, 400)
         self.setMouseTracking(True)
@@ -108,7 +112,16 @@ class Viewport(QWidget):
         painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
         if self.pixmap:
-            painter.drawPixmap(self.rect(), self.pixmap)
+            # Apply zoom
+            if hasattr(self, 'zoom_scale') and self.zoom_scale != 1.0:
+                w = int(self.width() * self.zoom_scale)
+                h = int(self.height() * self.zoom_scale)
+                pix = self.pixmap.scaled(w, h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                x = (self.width() - pix.width()) // 2
+                y = (self.height() - pix.height()) // 2
+                painter.drawPixmap(x, y, pix)
+            else:
+                painter.drawPixmap(self.rect(), self.pixmap)
 
         # Draw active tool overlay
         if self.tool_manager.active_tool:
