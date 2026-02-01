@@ -108,6 +108,11 @@ class Viewport(QWidget):
     def mouseReleaseEvent(self, event):
         self.tool_manager.handle_mouse_release(event)
 
+    def mouseDoubleClickEvent(self, event):
+        if self.tool_manager.active_tool:
+            self.tool_manager.active_tool.mouse_double_click(event)
+
+
     # ---------- PAINT PIPELINE ----------
 
     def paintEvent(self, event):
