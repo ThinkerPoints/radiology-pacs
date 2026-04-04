@@ -65,3 +65,19 @@ class DistanceTool(BaseTool):
         if spacing:
             return px * spacing
         return 0
+
+    # -------- Persistence --------
+
+    def export_json(self):
+        return [
+            {
+                "start": (p1.x(), p1.y()),
+                "end": (p2.x(), p2.y())
+            } for p1, p2 in self.measurements
+        ]
+
+    def import_json(self, data):
+        self.measurements = [
+            (QPointF(*d["start"]), QPointF(*d["end"]))
+            for d in data
+        ]
